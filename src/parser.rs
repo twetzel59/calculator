@@ -1,9 +1,11 @@
 //! This module provides the mechanism
 //! for parsing user input.
 
-/// Check that the supplied user input
-/// is correctly formatted.
-pub fn check(input: &str) -> Result<(), &str> {
+use expression::{Component, Expression};
+
+// Check that the supplied user input
+// is correctly formatted.
+fn check(input: &str) -> Result<(), &str> {
     // Non-ASCII characters aren't handled.
     if !input.is_ascii() {
         return Err("Found a non-ASCII character");
@@ -11,14 +13,13 @@ pub fn check(input: &str) -> Result<(), &str> {
 
     // Check that it's only numbers and operators.
     // Other characters aren't allowed.
-    if input.contains(|ch: char| !ch.is_ascii_digit() && !ch.is_ascii_whitespace()
-                                  && ch != '+' && ch != '*') {
+    if input.contains(|ch: char| !ch.is_ascii_digit() && !ch.is_ascii_whitespace() && !is_op(ch)) {
         return Err("Found an unexpected character");
     }
 
     // Check that there are no numbers without
     // operators between them.
-    for i in input.split(|ch| ch == '+' || ch == '*')
+    for i in input.split(is_op)
                   .map(|substr| substr.trim()) {
         if i.contains(char::is_whitespace) {
             return Err("Found whitespace between digits");
@@ -58,4 +59,70 @@ pub fn check(input: &str) -> Result<(), &str> {
 
     // If we're here, the input is okay.
     Ok(())
+}
+
+/// Parses user input into a calculation-ready
+/// format.
+/// If the input is invalid, returns an ``Err``
+/// containing a human-readable explaination
+/// of why the input was malformed.
+pub fn parse(input: &str) -> Result<Expression, &str> {
+    // First, make sure the input is valid.
+    // If it is invalid, the string shall not
+    // be parsed.
+    check(&input)?;
+
+    // Iterate over all characters in ``input``,
+    // excluding whitespace characters.
+    let mut iter = input.split_whitespace()
+                        .flat_map(|substr| substr.chars());
+
+    let mut expr = Expression::new();
+    let mut num_str = String::new();
+    loop {
+        num_str.extend(iter.by_ref().take_while(|&ch| !is_op(ch)));
+
+        if num_str.is_empty() {
+            break
+        }
+
+        println!("{}", num_str);
+
+        num_str.clear();
+    }
+
+    /*
+    let mut num_str = String::new();
+    for ch in input.split_whitespace().flat_map(|substr| substr.chars()) {
+        if is_op(ch) {
+            println!("{:?}", num_str);
+            num_str.clear();
+        } else {
+            num_str.push(ch);
+        }
+    }
+    println!("{:?}", num_str);
+    */
+
+    /*
+    while let Some(ch) = it.next() {
+        if is_op(ch) {
+            println!("{}", num_str);
+            num_str.clear();
+        } else {
+            num_str.push(ch);
+        }
+    }
+    */
+
+    Ok(expr)
+}
+
+// Returns ``true`` if and only if ``character``
+// is an operator.
+fn is_op(character: char) -> bool {
+    match character {
+        '+' | '*' => true,
+        _ => false,
+    }
 }

@@ -31,8 +31,8 @@ fn main() {
                 error("Invalid command")
             }
         } else {
-            match parser::check(&string) {
-                Ok(()) => {},
+            match parser::parse(&string) {
+                Ok(_) => {},
                 Err(msg) => error(msg),
             }
         }
