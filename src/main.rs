@@ -32,7 +32,7 @@ fn main() {
             }
         } else {
             match parser::parse(&string) {
-                Ok(_) => {},
+                Ok(expr) => println!("{:?}", expr),
                 Err(msg) => error(msg),
             }
         }

@@ -4,6 +4,7 @@
 
 /// Represents an expression consisting of
 /// one or more operations and their operands.
+#[derive(Clone, Debug)]
 pub struct Expression {
     components: Vec<Component>,
 }
@@ -23,17 +24,29 @@ impl Expression {
     }
 }
 
+/// The type used for numbers in the calculator.
+pub type Number = i64;
+
 /// Represents an individual scalar *or* operator
 /// in an expression. In other words, this type
 /// provides a higher-level representation of
 /// either a number or operator, such as ``+``.
+#[derive(Clone, Copy, Debug)]
 pub enum Component {
     /// A whole number.
-    Scalar(u32),
+    Num(Number),
 
-    /// An addition operator.
-    OpAdd,
+    /// An operator.
+    Op(Operator),
+}
 
-    /// A multiplication operator.
-    OpMul,
+/// Represents the various operators that the
+/// calculator supports.
+#[derive(Clone, Copy, Debug)]
+pub enum Operator {
+    /// Addition: ``+``
+    Add,
+
+    /// Multiplication: ``*``
+    Multiply,
 }

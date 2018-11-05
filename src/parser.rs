@@ -1,7 +1,7 @@
 //! This module provides the mechanism
 //! for parsing user input.
 
-use expression::{Component, Expression};
+use expression::{Component, Expression, Number, Operator};
 
 // Check that the supplied user input
 // is correctly formatted.
@@ -72,57 +72,49 @@ pub fn parse(input: &str) -> Result<Expression, &str> {
     // be parsed.
     check(&input)?;
 
-    // Iterate over all characters in ``input``,
-    // excluding whitespace characters.
-    let mut iter = input.split_whitespace()
-                        .flat_map(|substr| substr.chars());
+    let nums = input
+        .split(is_op)                   // split on operators
+        .map(|substr| substr.trim()     // take out whitespace
+        .parse::<Number>()              // parse the number
+        .unwrap());                     // check() catches invalid numbers.
+
+    let mut ops = input
+        .split(|c: char| c.is_ascii_digit()) // split on *digits*!
+        .map(|substr| substr.trim())         // remove the whitespace
+        .filter(|substr| !substr.is_empty()) // ignore empty strings
+        .map(|substr| to_op(substr.chars()   // The substr should contain only one char.
+                                  .nth(0)    // That first character is the operator.
+                                  .unwrap()) // unwrap the first character
+                      .unwrap());            // unwrap the parsed Operator
 
     let mut expr = Expression::new();
-    let mut num_str = String::new();
-    loop {
-        num_str.extend(iter.by_ref().take_while(|&ch| !is_op(ch)));
+    for n in nums {
+        expr.push(Component::Num(n));
 
-        if num_str.is_empty() {
-            break
-        }
-
-        println!("{}", num_str);
-
-        num_str.clear();
-    }
-
-    /*
-    let mut num_str = String::new();
-    for ch in input.split_whitespace().flat_map(|substr| substr.chars()) {
-        if is_op(ch) {
-            println!("{:?}", num_str);
-            num_str.clear();
-        } else {
-            num_str.push(ch);
+        if let Some(op) = ops.next() {
+            expr.push(Component::Op(op))
         }
     }
-    println!("{:?}", num_str);
-    */
-
-    /*
-    while let Some(ch) = it.next() {
-        if is_op(ch) {
-            println!("{}", num_str);
-            num_str.clear();
-        } else {
-            num_str.push(ch);
-        }
-    }
-    */
 
     Ok(expr)
+}
+
+// Converts the ``char`` ``character`` into
+// an operator, if possible.
+// If ``character`` is the character representation
+// of an operator, returns ``Ok(Operator)``.
+// If it is not possible to perform the conversion,
+// returns ``Err(())``.
+fn to_op(character: char) -> Result<Operator, ()> {
+    match character {
+        '+' => Ok(Operator::Add),
+        '*' => Ok(Operator::Multiply),
+        _ => Err(()),
+    }
 }
 
 // Returns ``true`` if and only if ``character``
 // is an operator.
 fn is_op(character: char) -> bool {
-    match character {
-        '+' | '*' => true,
-        _ => false,
-    }
+    to_op(character).is_ok()
 }
